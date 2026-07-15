@@ -20,59 +20,117 @@ export default function Reveal() {
   const [detail, setDetail] = useState<ApiRelic | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const doors = useRef(new Animated.Value(0)).current;    // vault door split
-  const glow = useRef(new Animated.Value(0)).current;
-  const artScale = useRef(new Animated.Value(0.6)).current;
+  // Suspense/search dot pulse (before reveal)
+  const searchPulse = useRef(new Animated.Value(0)).current;
+
+  // Vertical gold slash
+  const slashScaleY = useRef(new Animated.Value(0)).current;
+  const slashOpacity = useRef(new Animated.Value(0)).current;
+  const slashScaleX = useRef(new Animated.Value(0)).current;
+
+  // Relic materialization (scale + opacity, NO rotation)
+  const artScale = useRef(new Animated.Value(0.02)).current;
   const artOp = useRef(new Animated.Value(0)).current;
-  const artRot = useRef(new Animated.Value(0)).current;
+  const artBreath = useRef(new Animated.Value(0)).current;
+
+  // Text cascade
   const nameOp = useRef(new Animated.Value(0)).current;
+  const nameY = useRef(new Animated.Value(-14)).current;
   const serialOp = useRef(new Animated.Value(0)).current;
+  const serialY = useRef(new Animated.Value(-8)).current;
   const descOp = useRef(new Animated.Value(0)).current;
   const actionsOp = useRef(new Animated.Value(0)).current;
+  const actionsY = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
+    // Loop the search pulse while waiting for API/animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(searchPulse, { toValue: 1, duration: 800, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(searchPulse, { toValue: 0, duration: 800, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ])
+    ).start();
+
     let cancelled = false;
+
     const run = async () => {
       if (!userId) return;
       try {
         const r = await api.discover(userId);
         if (cancelled) return;
-        setResult(r);
-        try {
-          const d = await api.relicDetail(r.discovery.relic_key);
-          if (!cancelled) setDetail(d);
-        } catch {}
 
-        // Slow cinematic vault sequence
-        Animated.sequence([
-          // 1. doors open (slow)
-          Animated.timing(doors, { toValue: 1, duration: 1600, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }),
-          // 2. glow ignites + relic rises & rotates (parallel)
-          Animated.parallel([
-            Animated.timing(glow, { toValue: 1, duration: 1800, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-            Animated.timing(artOp, { toValue: 1, duration: 1400, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-            Animated.timing(artScale, { toValue: 1, duration: 2400, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-            Animated.timing(artRot, { toValue: 1, duration: 5200, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }),
-          ]),
-          // 3. metadata cascades
-          Animated.timing(nameOp, { toValue: 1, duration: 700, useNativeDriver: true }),
-          Animated.timing(serialOp, { toValue: 1, duration: 700, useNativeDriver: true }),
-          Animated.timing(descOp, { toValue: 1, duration: 700, useNativeDriver: true }),
-          Animated.timing(actionsOp, { toValue: 1, duration: 500, useNativeDriver: true }),
-        ]).start();
+        // Fetch detail in parallel with the drama
+        api.relicDetail(r.discovery.relic_key)
+          .then((d) => { if (!cancelled) setDetail(d); })
+          .catch(() => {});
+
+        // 1.2s dramatic pause (search dot pulses) BEFORE reveal begins
+        setTimeout(() => {
+          if (cancelled) return;
+          setResult(r);
+
+          // Slow, cinematic sequence — NO rotation
+          Animated.sequence([
+            // (1) Vertical gold slash appears — sudden, then hairline widens
+            Animated.parallel([
+              Animated.timing(slashOpacity, { toValue: 1, duration: 120, useNativeDriver: true }),
+              Animated.timing(slashScaleY, { toValue: 1, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+            ]),
+            Animated.delay(240),
+
+            // (2) Slash expands horizontally into subtle spotlight rails
+            Animated.timing(slashScaleX, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }),
+
+            // (3) Relic materializes: scale up slowly with fade-in
+            Animated.parallel([
+              Animated.timing(artOp, { toValue: 1, duration: 1400, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+              Animated.timing(artScale, { toValue: 1, duration: 2200, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+            ]),
+
+            // (5) Dramatic hold — 1s pause for viewer to absorb
+            Animated.delay(1000),
+
+            // (6) Text cascade: name drops from above
+            Animated.parallel([
+              Animated.timing(nameOp, { toValue: 1, duration: 620, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+              Animated.timing(nameY, { toValue: 0, duration: 620, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+            ]),
+            Animated.parallel([
+              Animated.timing(serialOp, { toValue: 1, duration: 520, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+              Animated.timing(serialY, { toValue: 0, duration: 520, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+            ]),
+            Animated.timing(descOp, { toValue: 1, duration: 520, useNativeDriver: true }),
+
+            // (7) Action buttons rise from below
+            Animated.parallel([
+              Animated.timing(actionsOp, { toValue: 1, duration: 500, useNativeDriver: true }),
+              Animated.timing(actionsY, { toValue: 0, duration: 500, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+            ]),
+          ]).start(() => {
+            // Very subtle breathing on the Relic — barely perceptible
+            Animated.loop(
+              Animated.sequence([
+                Animated.timing(artBreath, { toValue: 1, duration: 3400, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+                Animated.timing(artBreath, { toValue: 0, duration: 3400, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+              ])
+            ).start();
+          });
+        }, 1200);
       } catch (e: any) {
         if (!cancelled) setError(e?.message || 'error');
       }
     };
     run();
     return () => { cancelled = true; };
-  }, [userId, doors, glow, artScale, artOp, artRot, nameOp, serialOp, descOp, actionsOp]);
+  }, [userId]);
 
-  const leftDoor = doors.interpolate({ inputRange: [0, 1], outputRange: [0, -220] });
-  const rightDoor = doors.interpolate({ inputRange: [0, 1], outputRange: [0, 220] });
-  const glowScale = glow.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1.4] });
-  const glowOpacity = glow.interpolate({ inputRange: [0, 1], outputRange: [0, 0.5] });
-  const spin = artRot.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '340deg'] });
+  const searchOpacity = searchPulse.interpolate({ inputRange: [0, 1], outputRange: [0.25, 1] });
+
+  const slashHeight = slashScaleY.interpolate({ inputRange: [0, 1], outputRange: [0, 380] });
+  const slashWidth = slashScaleX.interpolate({ inputRange: [0, 1], outputRange: [1, 300] });
+  const slashInnerOpacity = slashScaleX.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 0.3, 0] });
+
+  const breathScale = artBreath.interpolate({ inputRange: [0, 1], outputRange: [1, 1.015] });
 
   return (
     <SafeAreaView style={styles.container} testID="reveal-screen" edges={['top']}>
@@ -81,45 +139,57 @@ export default function Reveal() {
       </Pressable>
 
       <View style={styles.stage}>
-        {/* Backdrop glow */}
+        {/* Search dot — visible only before result */}
+        {!result && !error && (
+          <View style={styles.searchWrap}>
+            <Animated.View style={[styles.searchDot, { opacity: searchOpacity }]} />
+            <Animated.Text style={[styles.searchText, { opacity: searchOpacity }]}>
+              SEARCHING · THE · VAULT
+            </Animated.Text>
+          </View>
+        )}
+
+        {/* Vertical gold slash → museum spotlight rails (very subtle) */}
         <Animated.View
           style={[
-            styles.glow,
-            { opacity: glowOpacity, transform: [{ scale: glowScale }] },
+            styles.slash,
+            {
+              opacity: slashOpacity,
+              height: slashHeight as unknown as number,
+              width: slashWidth as unknown as number,
+            },
           ]}
-        />
+          pointerEvents="none"
+        >
+          <Animated.View style={[styles.slashInner, { opacity: slashInnerOpacity }]} />
+        </Animated.View>
 
-        {/* Relic art */}
+        {/* Relic — pure PNG, no background, no rotation */}
         {error ? (
           <Text style={{ color: '#E57373' }}>{error}</Text>
-        ) : !result ? (
-          <ActivityIndicator color={COLORS.gold} />
-        ) : (
+        ) : result ? (
           <Animated.View
             style={{
               opacity: artOp,
-              transform: [{ scale: artScale }, { rotate: spin }],
+              transform: [{ scale: Animated.multiply(artScale, breathScale) }],
             }}
           >
-            <RelicArt relicKey={result.discovery.relic_key as RelicKey} size={260} />
+            <RelicArt relicKey={result.discovery.relic_key as RelicKey} size={280} />
           </Animated.View>
-        )}
+        ) : null}
 
-        {/* Vault doors sliding open */}
-        <Animated.View style={[styles.door, styles.doorLeft, { transform: [{ translateX: leftDoor }] }]}>
-          <View style={styles.doorSeam} />
-        </Animated.View>
-        <Animated.View style={[styles.door, styles.doorRight, { transform: [{ translateX: rightDoor }] }]}>
-          <View style={styles.doorSeam} />
-        </Animated.View>
+        {/* Loading state (before slash) — hidden after result arrives */}
+        {!result && !error && (
+          <ActivityIndicator style={styles.spinner} color={COLORS.gold} />
+        )}
       </View>
 
       {result && (
         <View style={styles.meta}>
-          <Animated.Text style={[styles.name, { opacity: nameOp }]}>
+          <Animated.Text style={[styles.name, { opacity: nameOp, transform: [{ translateY: nameY }] }]}>
             {result.discovery.relic_name}
           </Animated.Text>
-          <Animated.View style={[styles.serialRow, { opacity: serialOp }]}>
+          <Animated.View style={[styles.serialRow, { opacity: serialOp, transform: [{ translateY: serialY }] }]}>
             <View style={styles.tick} />
             <Text style={styles.serial}>
               N° {String(result.discovery.serial_number).padStart(6, '0')} · {result.relic.discovered}/{result.relic.max_supply}
@@ -139,7 +209,7 @@ export default function Reveal() {
         </View>
       )}
 
-      <Animated.View style={[styles.actions, { opacity: actionsOp }]}>
+      <Animated.View style={[styles.actions, { opacity: actionsOp, transform: [{ translateY: actionsY }] }]}>
         {result && (
           <>
             <PremiumButton
@@ -163,39 +233,41 @@ export default function Reveal() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#050505', paddingHorizontal: SPACING.xxl },
-  close: { position: 'absolute', top: 56, right: SPACING.lg, zIndex: 3, padding: 6 },
+  close: { position: 'absolute', top: 56, right: SPACING.lg, zIndex: 5, padding: 6 },
   stage: {
     flex: 1, alignItems: 'center', justifyContent: 'center',
     overflow: 'hidden',
   },
-  glow: {
-    position: 'absolute', width: 360, height: 360, borderRadius: 999,
-    backgroundColor: COLORS.gold,
+  // Search state
+  searchWrap: { position: 'absolute', alignItems: 'center' },
+  searchDot: { width: 4, height: 4, borderRadius: 999, backgroundColor: COLORS.gold, marginBottom: SPACING.md },
+  searchText: { color: COLORS.gold, letterSpacing: 6, fontSize: 10, paddingLeft: 6 },
+  spinner: { position: 'absolute', bottom: 40, opacity: 0 },
+  // Vertical spotlight rails — barely visible framing marks
+  slash: {
+    position: 'absolute',
+    alignItems: 'center', justifyContent: 'center',
+    borderLeftWidth: StyleSheet.hairlineWidth,
+    borderRightWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(201,169,97,0.28)',
   },
-  door: {
-    position: 'absolute', top: 0, bottom: 0, width: '55%',
-    backgroundColor: '#0A0A0A',
-    borderColor: COLORS.goldHairline,
+  slashInner: {
+    width: 1, height: '100%', backgroundColor: COLORS.gold,
   },
-  doorLeft: { left: 0, borderRightWidth: StyleSheet.hairlineWidth, alignItems: 'flex-end' },
-  doorRight: { right: 0, borderLeftWidth: StyleSheet.hairlineWidth, alignItems: 'flex-start' },
-  doorSeam: {
-    width: 1, height: '100%', backgroundColor: COLORS.gold, opacity: 0.15,
-  },
-  meta: { alignItems: 'center', paddingHorizontal: SPACING.md, minHeight: 120 },
+  meta: { alignItems: 'center', paddingHorizontal: SPACING.md, minHeight: 130 },
   name: {
-    color: COLORS.ice, fontSize: 34, fontFamily: 'serif', fontWeight: '300',
+    color: COLORS.ice, fontSize: 36, fontFamily: 'serif', fontWeight: '300',
     letterSpacing: 3, textAlign: 'center',
   },
   serialRow: { flexDirection: 'row', alignItems: 'center', marginTop: SPACING.md, gap: SPACING.md },
-  tick: { width: 12, height: 1, backgroundColor: COLORS.gold },
-  serial: { color: COLORS.gold, fontSize: 11, letterSpacing: 4 },
+  tick: { width: 14, height: 1, backgroundColor: COLORS.gold },
+  serial: { color: COLORS.gold, fontSize: 11, letterSpacing: 5 },
   desc: { color: COLORS.textDim, fontSize: 13, textAlign: 'center', marginTop: SPACING.lg, lineHeight: 22, letterSpacing: 0.4 },
   firstBadgeWrap: {
     marginTop: SPACING.lg,
     borderWidth: 1, borderColor: COLORS.gold,
     paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999,
   },
-  firstBadge: { color: COLORS.gold, letterSpacing: 5, fontSize: 9, fontWeight: '600' },
+  firstBadge: { color: COLORS.gold, letterSpacing: 5, fontSize: 9, fontWeight: '600', paddingLeft: 5 },
   actions: { paddingBottom: SPACING.xxl, paddingTop: SPACING.xl, gap: SPACING.md },
 });
