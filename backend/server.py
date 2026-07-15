@@ -1,4 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -351,6 +352,11 @@ async def user_stats(user_id: str):
 
 
 app.include_router(api_router)
+
+# Serve generated relic PNGs at /api/relic-images/{key}.png
+IMG_DIR = ROOT_DIR / "relic_images"
+if IMG_DIR.exists():
+    app.mount("/api/relic-images", StaticFiles(directory=str(IMG_DIR)), name="relic-images")
 
 app.add_middleware(
     CORSMiddleware,
