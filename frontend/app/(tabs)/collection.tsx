@@ -6,7 +6,7 @@ import { COLORS, SPACING } from '@/src/theme';
 import { useI18n } from '@/src/context/I18nContext';
 import { useAuth } from '@/src/context/AuthContext';
 import { api, ApiCollectionItem } from '@/src/context/api';
-import { RELICS, RelicKey } from '@/src/relics/data';
+import { RELIC_ORDER, RelicKey } from '@/src/relics/data';
 import RelicArt from '@/src/relics/RelicArt';
 
 export default function Collection() {
@@ -29,16 +29,9 @@ export default function Collection() {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  const owned: Record<string, ApiCollectionItem | undefined> = items.reduce(
-    (acc, i) => ({ ...acc, [i.relic_key]: i }),
-    {}
+  const data = [...items].sort(
+    (a, b) => (RELIC_ORDER[a.relic_key] ?? 999) - (RELIC_ORDER[b.relic_key] ?? 999)
   );
-
-  const data = RELICS.map((r) => ({
-    ...r,
-    ownedCount: owned[r.key]?.count ?? 0,
-    firstSerial: owned[r.key]?.first_serial,
-  }));
 
   return (
     <SafeAreaView style={styles.container} testID="collection-screen" edges={['top']}>
@@ -53,32 +46,30 @@ export default function Collection() {
       ) : (
         <FlatList
           data={data}
-          keyExtractor={(i) => i.key}
+          keyExtractor={(i) => i.relic_key}
           numColumns={2}
-          columnWrapperStyle={{ gap: SPACING.md, paddingHorizontal: SPACING.xl }}
+          columnWrapperStyle={data.length > 0 ? { gap: SPACING.md, paddingHorizontal: SPACING.xl } : undefined}
           contentContainerStyle={{ gap: SPACING.md, paddingBottom: SPACING.xxxl, paddingTop: SPACING.md }}
-          renderItem={({ item }) => {
-            const owned = item.ownedCount > 0;
-            return (
-              <Pressable
-                testID={`collection-item-${item.key}`}
-                onPress={() => router.push({ pathname: '/relic/[key]', params: { key: item.key } })}
-                style={[styles.card, !owned && styles.cardLocked]}
-              >
-                <View style={styles.artBox}>
-                  <RelicArt relicKey={item.key as RelicKey} size={110} discovered={owned} />
-                </View>
-                <Text style={[styles.cardName, !owned && { color: COLORS.textMuted }]}>{item.name}</Text>
-                <Text style={styles.cardSerial}>
-                  {owned ? `#${String(item.firstSerial).padStart(6, '0')}` : '— — —'}
-                </Text>
-              </Pressable>
-            );
-          }}
+          renderItem={({ item }) => (
+            <Pressable
+              testID={`collection-item-${item.relic_key}`}
+              onPress={() => router.push({ pathname: '/relic/[key]', params: { key: item.relic_key } })}
+              style={styles.card}
+            >
+              <View style={styles.artBox}>
+                <RelicArt relicKey={item.relic_key as RelicKey} size={110} discovered />
+              </View>
+              <Text style={styles.cardName}>{item.relic_name}</Text>
+              <Text style={styles.cardSerial}>
+                #{String(item.first_serial).padStart(6, '0')}
+                {item.count > 1 ? `  ×${item.count}` : ''}
+              </Text>
+            </Pressable>
+          )}
           ListEmptyComponent={() => (
-            <Text style={{ color: COLORS.textMuted, textAlign: 'center', marginTop: SPACING.xxxl }}>
-              {t('empty_collection')}
-            </Text>
+            <View style={styles.emptyWrap} testID="collection-empty">
+              <Text style={styles.emptyText}>{t('empty_collection')}</Text>
+            </View>
           )}
         />
       )}
@@ -93,6 +84,8 @@ const styles = StyleSheet.create({
   rule: { width: 14, height: 1, backgroundColor: COLORS.gold, marginVertical: SPACING.md },
   title: { color: COLORS.text, fontSize: 22, fontFamily: 'serif', letterSpacing: 1 },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  emptyWrap: { flex: 1, alignItems: 'center', paddingHorizontal: SPACING.xl, paddingTop: SPACING.xxxl },
+  emptyText: { color: COLORS.textMuted, textAlign: 'center', letterSpacing: 2, fontSize: 12 },
   card: {
     flex: 1, borderWidth: 1, borderColor: COLORS.border, borderRadius: 12,
     padding: SPACING.md, alignItems: 'center', backgroundColor: COLORS.bgSecondary,

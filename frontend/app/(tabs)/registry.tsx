@@ -5,8 +5,6 @@ import { useFocusEffect } from 'expo-router';
 import { COLORS, SPACING } from '@/src/theme';
 import { useI18n } from '@/src/context/I18nContext';
 import { api, ApiRegistry } from '@/src/context/api';
-import RelicArt from '@/src/relics/RelicArt';
-import { RelicKey } from '@/src/relics/data';
 
 function formatCount(n: number) {
   return new Intl.NumberFormat('en-US').format(n);
@@ -47,14 +45,8 @@ export default function Registry() {
           ItemSeparatorComponent={() => <View style={styles.sep} />}
           renderItem={({ item }) => (
             <View style={styles.row} testID={`registry-row-${item.key}`}>
-              <View style={styles.artMini}>
-                <RelicArt relicKey={item.key as RelicKey} size={44} discovered={item.discovered > 0} />
-              </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.rowName}>{item.name}</Text>
-                <Text style={styles.rowSub}>
-                  {formatCount(item.remaining)} {item.remaining === 1 ? 'unit remaining' : 'remaining'}
-                </Text>
               </View>
               <Text style={styles.count}>
                 {formatCount(item.discovered)} / {formatCount(item.max_supply)}
@@ -75,9 +67,7 @@ const styles = StyleSheet.create({
   title: { color: COLORS.text, fontSize: 22, fontFamily: 'serif', letterSpacing: 1 },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   sep: { height: 1, backgroundColor: COLORS.divider },
-  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: SPACING.lg, gap: SPACING.md },
-  artMini: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
-  rowName: { color: COLORS.text, fontSize: 16, fontFamily: 'serif', letterSpacing: 1 },
-  rowSub: { color: COLORS.textMuted, fontSize: 10, letterSpacing: 2, marginTop: 2 },
+  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: SPACING.xl },
+  rowName: { color: COLORS.text, fontSize: 18, fontFamily: 'serif', letterSpacing: 2 },
   count: { color: COLORS.gold, fontSize: 13, letterSpacing: 2, fontVariant: ['tabular-nums'] },
 });
