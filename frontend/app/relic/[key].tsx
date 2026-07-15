@@ -7,12 +7,11 @@ import { COLORS, SPACING } from '@/src/theme';
 import { useI18n } from '@/src/context/I18nContext';
 import { useAuth } from '@/src/context/AuthContext';
 import { api, ApiRelic } from '@/src/context/api';
+import { GoldRule, Eyebrow } from '@/src/components/Premium';
 import RelicArt from '@/src/relics/RelicArt';
 import { RelicKey } from '@/src/relics/data';
 
-function formatNumber(n: number) {
-  return new Intl.NumberFormat('en-US').format(n);
-}
+const nf = new Intl.NumberFormat('en-US');
 
 export default function RelicDetail() {
   const { key } = useLocalSearchParams<{ key: string }>();
@@ -48,55 +47,84 @@ export default function RelicDetail() {
   }
 
   const owned = !!firstDiscovery;
-  const first = firstDiscovery
-    ? {
-        serial: firstDiscovery.first_serial,
-        date: new Date(firstDiscovery.latest_discovered_at),
-      }
-    : null;
+  const first = firstDiscovery ? {
+    serial: firstDiscovery.first_serial,
+    date: new Date(firstDiscovery.latest_discovered_at),
+  } : null;
 
   return (
     <SafeAreaView style={styles.container} testID="relic-detail-screen" edges={['top']}>
       <Pressable onPress={() => router.back()} style={styles.back} testID="relic-back-button" hitSlop={12}>
-        <Ionicons name="chevron-back" size={22} color={COLORS.text} />
+        <Ionicons name="chevron-back" size={22} color={COLORS.ice} />
       </Pressable>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <View style={styles.hero}>
-          <RelicArt relicKey={data.key as RelicKey} size={240} discovered={owned} />
+        {/* Certificate frame */}
+        <View style={styles.certificate}>
+          <View style={styles.certOuter}>
+            <View style={styles.certInner}>
+              {/* corner accents */}
+              <View style={[styles.corner, styles.cornerTL]} />
+              <View style={[styles.corner, styles.cornerTR]} />
+              <View style={[styles.corner, styles.cornerBL]} />
+              <View style={[styles.corner, styles.cornerBR]} />
+
+              <View style={styles.certHeader}>
+                <Text style={styles.certBrand}>NEXORA</Text>
+                <Text style={styles.certBrandSub}>CERTIFICATE OF AUTHENTICITY</Text>
+              </View>
+
+              <GoldRule width={40} style={{ alignSelf: 'center', marginTop: SPACING.lg }} />
+
+              <View style={styles.plateWrap}>
+                <RelicArt relicKey={data.key as RelicKey} size={200} discovered={owned} />
+              </View>
+
+              <Text style={styles.name}>{data.name}</Text>
+              {first ? (
+                <Text style={styles.serial}>N° {String(first.serial).padStart(6, '0')}</Text>
+              ) : (
+                <Text style={[styles.serial, { color: COLORS.textMuted }]}>UNDISCOVERED</Text>
+              )}
+
+              <GoldRule width={20} style={{ alignSelf: 'center', marginVertical: SPACING.xl }} />
+
+              <View style={styles.certGrid}>
+                <Row label={t('max_qty')} value={nf.format(data.max_supply)} />
+                <Row label={t('discovered_qty')} value={nf.format(data.discovered)} />
+                <Row label={t('remaining_qty')} value={nf.format(data.remaining ?? data.max_supply - data.discovered)} />
+                <Row label={t('first_collector')} value={data.first_collector_name || '—'} />
+                {owned && name ? <Row label={t('current_collector')} value={name} /> : null}
+                {first ? (
+                  <>
+                    <Row label={t('discovery_date')} value={first.date.toLocaleDateString()} />
+                    <Row label={t('discovery_time')} value={first.date.toLocaleTimeString()} />
+                  </>
+                ) : null}
+              </View>
+
+              <Text style={styles.legal}>{t('certificate_body')}</Text>
+
+              <View style={styles.sealRow}>
+                <View style={styles.seal}>
+                  <Text style={styles.sealText}>NX</Text>
+                </View>
+                <View>
+                  <Text style={styles.signName}>Nexora Archive</Text>
+                  <Text style={styles.signLine}>Curator · Master of Vault</Text>
+                </View>
+              </View>
+            </View>
+          </View>
         </View>
 
-        <Text style={styles.name}>{data.name}</Text>
-        <View style={styles.centerRule} />
-        {first && (
-          <Text style={styles.serial}>#{String(first.serial).padStart(6, '0')}</Text>
-        )}
+        {/* Below-certificate editorial */}
+        <View style={styles.article}>
+          <Eyebrow>{t('description')}</Eyebrow>
+          <Text style={styles.body}>{lang === 'pt' ? data.description_pt : data.description_en}</Text>
 
-        <Text style={styles.sectionLabel}>{t('description')}</Text>
-        <Text style={styles.body}>
-          {lang === 'pt' ? data.description_pt : data.description_en}
-        </Text>
-
-        <Text style={styles.sectionLabel}>{t('history')}</Text>
-        <Text style={styles.body}>
-          {lang === 'pt' ? data.history_pt : data.history_en}
-        </Text>
-
-        <View style={styles.cert}>
-          <Text style={styles.certTitle}>{t('certificate')}</Text>
-          <View style={styles.certRule} />
-          <Row label={t('max_qty')} value={formatNumber(data.max_supply)} />
-          <Row label={t('discovered_qty')} value={formatNumber(data.discovered)} />
-          <Row label={t('remaining_qty')} value={formatNumber((data.remaining ?? data.max_supply - data.discovered))} />
-          <Row label={t('first_collector')} value={data.first_collector_name || '—'} />
-          {owned && name ? <Row label={t('current_collector')} value={name} /> : null}
-          {first ? (
-            <>
-              <Row label={t('discovery_date')} value={first.date.toLocaleDateString()} />
-              <Row label={t('discovery_time')} value={first.date.toLocaleTimeString()} />
-            </>
-          ) : null}
-          <Text style={styles.certBody}>{t('certificate_body')}</Text>
+          <Eyebrow style={{ marginTop: SPACING.xxl }}>{t('history')}</Eyebrow>
+          <Text style={styles.body}>{lang === 'pt' ? data.history_pt : data.history_en}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -107,29 +135,60 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
-      <Text style={styles.rowValue}>{value}</Text>
+      <View style={styles.rowDot} />
+      <Text style={styles.rowValue} numberOfLines={1}>{value}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
-  back: { position: 'absolute', top: 56, left: SPACING.lg, zIndex: 2, padding: 6 },
-  scroll: { paddingHorizontal: SPACING.xl, paddingBottom: SPACING.xxxl, paddingTop: SPACING.xxxl },
-  hero: { alignItems: 'center', paddingVertical: SPACING.xl, backgroundColor: COLORS.bgSecondary, borderRadius: 20 },
-  name: { color: COLORS.text, fontSize: 34, fontFamily: 'serif', textAlign: 'center', marginTop: SPACING.xl, letterSpacing: 2 },
-  centerRule: { width: 20, height: 1, backgroundColor: COLORS.gold, alignSelf: 'center', marginVertical: SPACING.md },
-  serial: { color: COLORS.gold, textAlign: 'center', letterSpacing: 4, fontSize: 12 },
-  sectionLabel: { color: COLORS.textMuted, fontSize: 10, letterSpacing: 3, marginTop: SPACING.xl, marginBottom: SPACING.sm },
-  body: { color: COLORS.textDim, fontSize: 14, lineHeight: 22 },
-  cert: {
-    marginTop: SPACING.xxl, padding: SPACING.xl, borderWidth: 1, borderColor: COLORS.gold,
-    borderRadius: 12, backgroundColor: COLORS.bgSecondary,
+  back: { position: 'absolute', top: 56, left: SPACING.lg, zIndex: 3, padding: 6 },
+  scroll: { paddingHorizontal: SPACING.xl, paddingBottom: SPACING.gallery, paddingTop: SPACING.gallery },
+  certificate: { backgroundColor: COLORS.bgSecondary, padding: 8, borderWidth: StyleSheet.hairlineWidth, borderColor: COLORS.hairlineStrong },
+  certOuter: { borderWidth: 1, borderColor: COLORS.goldHairline, padding: 8 },
+  certInner: {
+    borderWidth: StyleSheet.hairlineWidth, borderColor: COLORS.gold,
+    paddingHorizontal: SPACING.xl, paddingVertical: SPACING.xxl,
+    backgroundColor: COLORS.bg,
   },
-  certTitle: { color: COLORS.gold, letterSpacing: 4, fontSize: 12, textAlign: 'center' },
-  certRule: { width: 20, height: 1, backgroundColor: COLORS.gold, alignSelf: 'center', marginTop: SPACING.md, marginBottom: SPACING.lg },
-  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: SPACING.sm, borderBottomWidth: 1, borderBottomColor: COLORS.divider },
-  rowLabel: { color: COLORS.textMuted, fontSize: 11, letterSpacing: 2 },
-  rowValue: { color: COLORS.text, fontSize: 12, letterSpacing: 1 },
-  certBody: { color: COLORS.textMuted, fontSize: 11, lineHeight: 18, marginTop: SPACING.lg, textAlign: 'center', fontStyle: 'italic' },
+  corner: {
+    position: 'absolute', width: 12, height: 12,
+    borderColor: COLORS.gold,
+  },
+  cornerTL: { top: 8, left: 8, borderTopWidth: 1, borderLeftWidth: 1 },
+  cornerTR: { top: 8, right: 8, borderTopWidth: 1, borderRightWidth: 1 },
+  cornerBL: { bottom: 8, left: 8, borderBottomWidth: 1, borderLeftWidth: 1 },
+  cornerBR: { bottom: 8, right: 8, borderBottomWidth: 1, borderRightWidth: 1 },
+  certHeader: { alignItems: 'center' },
+  certBrand: { color: COLORS.ice, fontSize: 16, letterSpacing: 10, marginTop: SPACING.md },
+  certBrandSub: { color: COLORS.gold, fontSize: 9, letterSpacing: 4, marginTop: 6, fontWeight: '500' },
+  plateWrap: { alignItems: 'center', marginTop: SPACING.xl, marginBottom: SPACING.xl },
+  name: { color: COLORS.ice, fontSize: 30, fontFamily: 'serif', fontWeight: '300', textAlign: 'center', letterSpacing: 3 },
+  serial: { color: COLORS.gold, textAlign: 'center', letterSpacing: 5, fontSize: 11, marginTop: SPACING.sm },
+  certGrid: { marginTop: SPACING.md },
+  row: {
+    flexDirection: 'row', alignItems: 'center', paddingVertical: SPACING.sm, gap: SPACING.sm,
+  },
+  rowLabel: { color: COLORS.textMuted, fontSize: 10, letterSpacing: 2, textTransform: 'uppercase' },
+  rowDot: { flex: 1, height: 1, borderBottomWidth: StyleSheet.hairlineWidth, borderStyle: 'dotted', borderColor: COLORS.hairlineStrong },
+  rowValue: { color: COLORS.ice, fontSize: 11, letterSpacing: 1, maxWidth: '55%', textAlign: 'right' },
+  legal: {
+    color: COLORS.textMuted, fontSize: 10, lineHeight: 16,
+    marginTop: SPACING.xl, textAlign: 'center', fontStyle: 'italic', letterSpacing: 0.6,
+  },
+  sealRow: {
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
+    marginTop: SPACING.xl, paddingTop: SPACING.lg,
+    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: COLORS.hairline,
+  },
+  seal: {
+    width: 42, height: 42, borderRadius: 999, borderWidth: 1, borderColor: COLORS.gold,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  sealText: { color: COLORS.gold, fontFamily: 'serif', fontSize: 13, letterSpacing: 2 },
+  signName: { color: COLORS.ice, fontSize: 12, fontFamily: 'serif' },
+  signLine: { color: COLORS.textMuted, fontSize: 9, letterSpacing: 2, marginTop: 2 },
+  article: { paddingHorizontal: SPACING.sm, marginTop: SPACING.xxl },
+  body: { color: COLORS.textDim, fontSize: 14, lineHeight: 24, marginTop: SPACING.md, letterSpacing: 0.4 },
 });

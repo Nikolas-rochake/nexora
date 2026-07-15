@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Platform } from 'react-native';
+import { View, Platform, StyleSheet } from 'react-native';
 import { COLORS } from '@/src/theme';
 
 export default function TabLayout() {
@@ -8,64 +8,74 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarShowLabel: false,
         tabBarActiveTintColor: COLORS.gold,
         tabBarInactiveTintColor: COLORS.textMuted,
         tabBarStyle: {
           backgroundColor: COLORS.bg,
-          borderTopColor: COLORS.border,
-          borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 84 : 68,
-          paddingBottom: Platform.OS === 'ios' ? 24 : 10,
-          paddingTop: 8,
+          borderTopColor: COLORS.hairline,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          height: Platform.OS === 'ios' ? 84 : 66,
+          paddingBottom: Platform.OS === 'ios' ? 26 : 10,
+          paddingTop: 12,
+          elevation: 0,
         },
-        tabBarLabelStyle: { fontSize: 10, letterSpacing: 2, fontWeight: '500' },
+        tabBarItemStyle: { paddingTop: 4 },
       }}
     >
       <Tabs.Screen
         name="home"
-        options={{
-          title: 'HOME',
-          tabBarIcon: ({ color }) => <Ionicons name="diamond-outline" size={20} color={color} />,
-        }}
+        options={{ tabBarIcon: ({ color }) => <TabDot active={color === COLORS.gold} icon="home-outline" /> }}
       />
       <Tabs.Screen
         name="collection"
-        options={{
-          title: 'COLEÇÃO',
-          tabBarIcon: ({ color }) => <Ionicons name="grid-outline" size={20} color={color} />,
-        }}
+        options={{ tabBarIcon: ({ color }) => <TabDot active={color === COLORS.gold} icon="albums-outline" /> }}
       />
       <Tabs.Screen
         name="discover"
         options={{
-          title: 'DESCOBRIR',
           tabBarIcon: ({ color }) => (
-            <View
-              style={{
-                width: 42, height: 42, borderRadius: 21,
-                borderWidth: 1, borderColor: color, alignItems: 'center', justifyContent: 'center',
-                marginTop: -12, backgroundColor: COLORS.bg,
-              }}
-            >
-              <Ionicons name="add" size={22} color={color} />
+            <View style={[styles.centerPill, color === COLORS.gold && styles.centerPillActive]}>
+              <Ionicons name="add" size={20} color={color === COLORS.gold ? COLORS.bg : COLORS.gold} />
             </View>
           ),
         }}
       />
       <Tabs.Screen
         name="registry"
-        options={{
-          title: 'REGISTRO',
-          tabBarIcon: ({ color }) => <Ionicons name="library-outline" size={20} color={color} />,
-        }}
+        options={{ tabBarIcon: ({ color }) => <TabDot active={color === COLORS.gold} icon="reader-outline" /> }}
       />
       <Tabs.Screen
         name="profile"
-        options={{
-          title: 'PERFIL',
-          tabBarIcon: ({ color }) => <Ionicons name="person-outline" size={20} color={color} />,
-        }}
+        options={{ tabBarIcon: ({ color }) => <TabDot active={color === COLORS.gold} icon="person-outline" /> }}
       />
     </Tabs>
   );
 }
+
+function TabDot({ icon, active }: { icon: React.ComponentProps<typeof Ionicons>['name']; active: boolean }) {
+  return (
+    <View style={styles.tabItem}>
+      <Ionicons name={icon} size={18} color={active ? COLORS.gold : COLORS.textMuted} />
+      <View style={[styles.dot, active && styles.dotActive]} />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  tabItem: { alignItems: 'center', justifyContent: 'center' },
+  dot: {
+    width: 3, height: 3, borderRadius: 999,
+    backgroundColor: 'transparent',
+    marginTop: 6,
+  },
+  dotActive: { backgroundColor: COLORS.gold },
+  centerPill: {
+    width: 46, height: 46, borderRadius: 999,
+    borderWidth: 1, borderColor: COLORS.goldHairline,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: COLORS.bgSecondary,
+    marginTop: -14,
+  },
+  centerPillActive: { backgroundColor: COLORS.gold, borderColor: COLORS.gold },
+});

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,19 +7,9 @@ import { COLORS, SPACING } from '@/src/theme';
 import { useI18n } from '@/src/context/I18nContext';
 import { useAuth } from '@/src/context/AuthContext';
 import { api } from '@/src/context/api';
+import { PremiumButton, Eyebrow } from '@/src/components/Premium';
 import RelicArt from '@/src/relics/RelicArt';
 import { RelicKey } from '@/src/relics/data';
-
-type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
-
-type TileProps = {
-  testID: string;
-  label: string;
-  icon: IoniconName;
-  metric?: string;
-  accent?: boolean;
-  onPress: () => void;
-};
 
 export default function Home() {
   const router = useRouter();
@@ -36,16 +26,13 @@ export default function Home() {
       const [r, s] = await Promise.all([api.rarest(userId), api.stats(userId)]);
       setRarest(r);
       setStats(s);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }, [userId]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
   useEffect(() => { load(); }, [load]);
 
   const relicCount = stats?.total_relics ?? 0;
-  const invitesCount = stats?.invites_sent ?? 0;
 
   return (
     <SafeAreaView style={styles.container} testID="home-screen" edges={['top']}>
@@ -53,150 +40,106 @@ export default function Home() {
         <View style={styles.header}>
           <View>
             <Text style={styles.brand}>NEXORA</Text>
-            <View style={styles.rule} />
+            <Text style={styles.brandSub}>THE VAULT</Text>
           </View>
           <Pressable onPress={() => router.push('/settings')} testID="home-settings-button" hitSlop={12}>
-            <Ionicons name="ellipsis-horizontal" size={22} color={COLORS.text} />
+            <Ionicons name="ellipsis-horizontal" size={20} color={COLORS.textDim} />
           </Pressable>
         </View>
 
-        <Text style={styles.greet}>{name ? name.split(' ')[0] : ''}</Text>
-        <Text style={styles.sectionLabel}>{t('rarest_relic')}</Text>
+        <View style={styles.identity}>
+          <Eyebrow>MEMBER</Eyebrow>
+          <Text style={styles.greet}>{name || '—'}</Text>
+        </View>
 
-        <View style={styles.hero}>
+        <View style={styles.divider} />
+
+        <Eyebrow style={{ marginTop: SPACING.xl }}>{t('rarest_relic')}</Eyebrow>
+
+        <View style={styles.hero} testID="home-hero">
           {loading ? (
             <ActivityIndicator color={COLORS.gold} />
           ) : rarest ? (
             <Pressable
               testID="home-hero-relic"
-              style={{ alignItems: 'center' }}
+              style={styles.heroPress}
               onPress={() => router.push({ pathname: '/relic/[key]', params: { key: rarest.relic_key } })}
             >
-              <RelicArt relicKey={rarest.relic_key as RelicKey} size={200} />
+              <View style={styles.pedestal}>
+                <View style={styles.pedestalRule} />
+                <View style={styles.pedestalGlow} />
+                <RelicArt relicKey={rarest.relic_key as RelicKey} size={230} />
+              </View>
               <Text style={styles.heroName}>{rarest.relic_name}</Text>
-              <Text style={styles.heroSerial}>#{String(rarest.serial_number).padStart(6, '0')}</Text>
+              <View style={styles.heroSerialRow}>
+                <View style={styles.serialTick} />
+                <Text style={styles.heroSerial}>N° {String(rarest.serial_number).padStart(6, '0')}</Text>
+                <View style={styles.serialTick} />
+              </View>
             </Pressable>
           ) : (
-            <Pressable
-              testID="home-empty-cta"
-              onPress={() => router.push('/(tabs)/discover')}
-              style={styles.empty}
-            >
+            <View style={styles.empty}>
+              <View style={styles.pedestalRule} />
               <Text style={styles.emptyText}>{t('no_relic_yet')}</Text>
-              <Text style={styles.emptyArrow}>→</Text>
-            </Pressable>
+              <PremiumButton
+                testID="home-empty-cta"
+                variant="ghost"
+                label={t('discover_relic')}
+                onPress={() => router.push('/(tabs)/discover')}
+                fullWidth={false}
+                style={{ marginTop: SPACING.xl }}
+              />
+            </View>
           )}
         </View>
 
-        <View style={styles.grid}>
-          <Tile
-            testID="home-tile-discover"
-            label={t('discover_relic')}
-            icon="add-outline"
-            accent
-            onPress={() => router.push('/(tabs)/discover')}
-          />
-          <Tile
-            testID="home-tile-collection"
-            label={t('my_collection')}
-            icon="grid-outline"
-            metric={String(relicCount).padStart(2, '0')}
-            onPress={() => router.push('/(tabs)/collection')}
-          />
-          <Tile
-            testID="home-tile-registry"
-            label={t('world_registry')}
-            icon="library-outline"
-            onPress={() => router.push('/(tabs)/registry')}
-          />
-          <Tile
-            testID="home-tile-invites"
-            label={t('invites')}
-            icon="mail-outline"
-            metric={String(invitesCount).padStart(2, '0')}
-            onPress={() => router.push('/invites')}
-          />
+        <View style={styles.footer}>
+          <Text style={styles.footerCount}>{String(relicCount).padStart(2, '0')}</Text>
+          <Text style={styles.footerLabel}>RELICS · ARCHIVED</Text>
         </View>
-
-        <View style={{ height: SPACING.xxxl }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function Tile({ testID, label, icon, metric, accent, onPress }: TileProps) {
-  const fg = accent ? COLORS.bg : COLORS.text;
-  const dim = accent ? COLORS.bg : COLORS.textMuted;
-  return (
-    <Pressable
-      testID={testID}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.tile,
-        accent && styles.tileAccent,
-        pressed && { opacity: 0.85 },
-      ]}
-    >
-      <View style={styles.tileTop}>
-        <View style={[styles.iconBox, accent && styles.iconBoxAccent]}>
-          <Ionicons name={icon} size={16} color={accent ? COLORS.bg : COLORS.gold} />
-        </View>
-        <Ionicons name="arrow-forward" size={14} color={accent ? COLORS.bg : COLORS.gold} />
-      </View>
-      <View style={styles.tileBottom}>
-        {metric !== undefined ? (
-          <Text style={[styles.tileMetric, { color: fg }]}>{metric}</Text>
-        ) : (
-          <View style={{ height: 22 }} />
-        )}
-        <Text style={[styles.tileLabel, { color: dim }]} numberOfLines={1}>
-          {label}
-        </Text>
-      </View>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
-  scroll: { paddingHorizontal: SPACING.xl },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: SPACING.md },
-  brand: { color: COLORS.text, fontSize: 14, letterSpacing: 8 },
-  rule: { width: 14, height: 1, backgroundColor: COLORS.gold, marginTop: 6 },
-  greet: { color: COLORS.text, fontSize: 32, fontFamily: 'serif', marginTop: SPACING.xl },
-  sectionLabel: { color: COLORS.textMuted, fontSize: 10, letterSpacing: 3, marginTop: SPACING.md },
+  scroll: { paddingHorizontal: SPACING.xxl, paddingBottom: SPACING.gallery },
+  header: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingTop: SPACING.lg,
+  },
+  brand: { color: COLORS.ice, fontSize: 14, letterSpacing: 8 },
+  brandSub: { color: COLORS.textMuted, fontSize: 8, letterSpacing: 6, marginTop: 4 },
+  identity: { marginTop: SPACING.xxxl },
+  greet: {
+    color: COLORS.ice, fontSize: 30, fontFamily: 'serif',
+    fontWeight: '300', marginTop: SPACING.md, letterSpacing: 0.5,
+  },
+  divider: { height: 1, backgroundColor: COLORS.hairline, marginTop: SPACING.xl },
   hero: {
-    marginTop: SPACING.xl,
-    borderWidth: 1, borderColor: COLORS.border, borderRadius: 20,
-    backgroundColor: COLORS.bgSecondary,
-    minHeight: 300, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl,
+    marginTop: SPACING.lg, minHeight: 420, alignItems: 'center', justifyContent: 'center',
   },
-  heroName: { color: COLORS.text, fontSize: 22, fontFamily: 'serif', marginTop: SPACING.md, letterSpacing: 1 },
-  heroSerial: { color: COLORS.gold, fontSize: 12, letterSpacing: 4, marginTop: 6 },
-  empty: { alignItems: 'center', flexDirection: 'row', gap: 12 },
-  emptyText: { color: COLORS.textDim, fontSize: 14, letterSpacing: 2 },
-  emptyArrow: { color: COLORS.gold, fontSize: 20 },
-  grid: {
-    flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between',
-    marginTop: SPACING.xl,
-    rowGap: SPACING.md,
+  heroPress: { alignItems: 'center', paddingVertical: SPACING.xl },
+  pedestal: { alignItems: 'center', justifyContent: 'center' },
+  pedestalGlow: {
+    position: 'absolute', width: 260, height: 260, borderRadius: 999,
+    backgroundColor: COLORS.gold, opacity: 0.05,
   },
-  tile: {
-    width: '48.5%', height: 132,
-    borderWidth: 1, borderColor: COLORS.border, borderRadius: 12,
-    padding: SPACING.lg, justifyContent: 'space-between',
-    backgroundColor: COLORS.bgSecondary,
+  pedestalRule: {
+    position: 'absolute', bottom: 6, width: 200, height: 1,
+    backgroundColor: COLORS.goldHairline,
   },
-  tileAccent: { backgroundColor: COLORS.gold, borderColor: COLORS.gold },
-  tileTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  iconBox: {
-    width: 30, height: 30, borderRadius: 999,
-    borderWidth: 1, borderColor: COLORS.border,
-    alignItems: 'center', justifyContent: 'center',
-    backgroundColor: COLORS.bg,
+  heroName: {
+    color: COLORS.ice, fontSize: 28, fontFamily: 'serif', fontWeight: '300',
+    marginTop: SPACING.xxl, letterSpacing: 3,
   },
-  iconBoxAccent: { backgroundColor: 'rgba(9,9,9,0.08)', borderColor: 'rgba(9,9,9,0.25)' },
-  tileBottom: {},
-  tileMetric: { fontSize: 22, fontFamily: 'serif', letterSpacing: 1 },
-  tileLabel: { fontSize: 11, letterSpacing: 2, marginTop: 4 },
+  heroSerialRow: { flexDirection: 'row', alignItems: 'center', marginTop: SPACING.md, gap: SPACING.md },
+  serialTick: { width: 14, height: 1, backgroundColor: COLORS.gold },
+  heroSerial: { color: COLORS.gold, fontSize: 11, letterSpacing: 4 },
+  empty: { alignItems: 'center', paddingVertical: SPACING.gallery },
+  emptyText: { color: COLORS.textDim, fontSize: 13, letterSpacing: 3, marginTop: SPACING.xl, textTransform: 'uppercase' },
+  footer: { alignItems: 'center', marginTop: SPACING.xxxl },
+  footerCount: { color: COLORS.ice, fontSize: 48, fontFamily: 'serif', fontWeight: '300', letterSpacing: 2 },
+  footerLabel: { color: COLORS.textMuted, fontSize: 9, letterSpacing: 5, marginTop: SPACING.sm },
 });

@@ -3,15 +3,12 @@ import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-nativ
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import { COLORS, SPACING } from '@/src/theme';
-import { useI18n } from '@/src/context/I18nContext';
 import { api, ApiRegistry } from '@/src/context/api';
+import { GoldRule } from '@/src/components/Premium';
 
-function formatCount(n: number) {
-  return new Intl.NumberFormat('en-US').format(n);
-}
+const nf = new Intl.NumberFormat('en-US');
 
 export default function Registry() {
-  const { t } = useI18n();
   const [items, setItems] = useState<ApiRegistry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -20,9 +17,7 @@ export default function Registry() {
     try {
       const data = await api.registry();
       setItems(data);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }, []);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
@@ -31,8 +26,8 @@ export default function Registry() {
     <SafeAreaView style={styles.container} testID="registry-screen" edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.brand}>NEXORA</Text>
-        <View style={styles.rule} />
-        <Text style={styles.title}>{t('world_registry')}</Text>
+        <Text style={styles.brandSub}>WORLD · LEDGER</Text>
+        <GoldRule width={20} style={{ marginTop: SPACING.md, alignSelf: 'center' }} />
       </View>
 
       {loading ? (
@@ -41,15 +36,22 @@ export default function Registry() {
         <FlatList
           data={items}
           keyExtractor={(i) => i.key}
-          contentContainerStyle={{ paddingHorizontal: SPACING.xl, paddingBottom: SPACING.xxxl }}
+          contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={styles.sep} />}
-          renderItem={({ item }) => (
+          ListHeaderComponent={() => (
+            <View style={styles.legend}>
+              <Text style={styles.legendLeft}>NAME</Text>
+              <Text style={styles.legendRight}>DISCOVERED · MAX</Text>
+            </View>
+          )}
+          renderItem={({ item, index }) => (
             <View style={styles.row} testID={`registry-row-${item.key}`}>
+              <Text style={styles.index}>{String(index + 1).padStart(2, '0')}</Text>
               <View style={{ flex: 1 }}>
                 <Text style={styles.rowName}>{item.name}</Text>
               </View>
               <Text style={styles.count}>
-                {formatCount(item.discovered)} / {formatCount(item.max_supply)}
+                {nf.format(item.discovered)} <Text style={styles.countSlash}>·</Text> {nf.format(item.max_supply)}
               </Text>
             </View>
           )}
@@ -61,13 +63,25 @@ export default function Registry() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
-  header: { alignItems: 'center', paddingTop: SPACING.md, paddingBottom: SPACING.lg },
-  brand: { color: COLORS.text, fontSize: 14, letterSpacing: 8 },
-  rule: { width: 14, height: 1, backgroundColor: COLORS.gold, marginVertical: SPACING.md },
-  title: { color: COLORS.text, fontSize: 22, fontFamily: 'serif', letterSpacing: 1 },
+  header: { alignItems: 'center', paddingTop: SPACING.lg, paddingBottom: SPACING.xxl },
+  brand: { color: COLORS.ice, fontSize: 14, letterSpacing: 10 },
+  brandSub: { color: COLORS.textMuted, fontSize: 9, letterSpacing: 5, marginTop: 8 },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  sep: { height: 1, backgroundColor: COLORS.divider },
-  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: SPACING.xl },
-  rowName: { color: COLORS.text, fontSize: 18, fontFamily: 'serif', letterSpacing: 2 },
-  count: { color: COLORS.gold, fontSize: 13, letterSpacing: 2, fontVariant: ['tabular-nums'] },
+  list: { paddingHorizontal: SPACING.xxl, paddingBottom: SPACING.gallery },
+  legend: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingBottom: SPACING.md, marginBottom: SPACING.md,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.hairlineStrong,
+  },
+  legendLeft: { color: COLORS.textMuted, fontSize: 9, letterSpacing: 4 },
+  legendRight: { color: COLORS.textMuted, fontSize: 9, letterSpacing: 4 },
+  sep: { height: 1, backgroundColor: COLORS.hairline },
+  row: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: SPACING.xl, gap: SPACING.lg,
+  },
+  index: { color: COLORS.gold, fontSize: 11, letterSpacing: 2, fontFamily: 'serif' },
+  rowName: { color: COLORS.ice, fontSize: 20, fontFamily: 'serif', letterSpacing: 3, fontWeight: '300' },
+  count: { color: COLORS.gold, fontSize: 12, letterSpacing: 2, fontVariant: ['tabular-nums'] },
+  countSlash: { color: COLORS.textMuted },
 });

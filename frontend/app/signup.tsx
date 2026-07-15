@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   View, Text, StyleSheet, Pressable, TextInput, ScrollView,
-  KeyboardAvoidingView, Platform, ActivityIndicator,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING } from '@/src/theme';
 import { useI18n } from '@/src/context/I18nContext';
 import { useAuth } from '@/src/context/AuthContext';
+import { PremiumButton, GoldRule, Eyebrow } from '@/src/components/Premium';
 
 export default function Signup() {
   const router = useRouter();
@@ -46,53 +47,26 @@ export default function Signup() {
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <Pressable onPress={() => router.back()} style={styles.back} testID="signup-back-button" hitSlop={12}>
-            <Ionicons name="chevron-back" size={22} color={COLORS.text} />
+            <Ionicons name="chevron-back" size={22} color={COLORS.ice} />
           </Pressable>
 
           <Text style={styles.brand}>NEXORA</Text>
-          <View style={styles.rule} />
+          <GoldRule width={16} style={{ alignSelf: 'center', marginTop: SPACING.md }} />
+          <Eyebrow style={{ alignSelf: 'center', marginTop: SPACING.xxl }}>NEW · MEMBER</Eyebrow>
           <Text style={styles.title}>{t('signup_title')}</Text>
 
           <Pressable style={styles.photoWrap} testID="signup-photo-button">
-            <View style={styles.photoCircle}>
-              <Ionicons name="person-outline" size={36} color={COLORS.textMuted} />
+            <View style={styles.photoRing}>
+              <View style={styles.photoCircle}>
+                <Ionicons name="person-outline" size={30} color={COLORS.textDim} />
+              </View>
             </View>
             <Text style={styles.photoLabel}>{t('add_photo')}</Text>
           </Pressable>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>{t('name')}</Text>
-            <TextInput
-              testID="signup-name-input"
-              value={name}
-              onChangeText={setName}
-              style={styles.input}
-              placeholderTextColor={COLORS.textMuted}
-              autoCapitalize="words"
-            />
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>{t('city')}</Text>
-            <TextInput
-              testID="signup-city-input"
-              value={city}
-              onChangeText={setCity}
-              style={styles.input}
-              placeholderTextColor={COLORS.textMuted}
-            />
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>{t('country')}</Text>
-            <TextInput
-              testID="signup-country-input"
-              value={country}
-              onChangeText={setCountry}
-              style={styles.input}
-              placeholderTextColor={COLORS.textMuted}
-            />
-          </View>
+          <Field label={t('name')} value={name} onChange={setName} testID="signup-name-input" autoCapitalize="words" />
+          <Field label={t('city')} value={city} onChange={setCity} testID="signup-city-input" />
+          <Field label={t('country')} value={country} onChange={setCountry} testID="signup-country-input" />
 
           <Pressable
             testID="signup-terms-toggle"
@@ -100,62 +74,77 @@ export default function Signup() {
             style={styles.termsRow}
           >
             <View style={[styles.checkbox, accept && styles.checkboxOn]}>
-              {accept ? <Ionicons name="checkmark" size={14} color={COLORS.bg} /> : null}
+              {accept ? <Ionicons name="checkmark" size={12} color={COLORS.bg} /> : null}
             </View>
             <Text style={styles.termsText}>{t('accept_terms')}</Text>
           </Pressable>
 
           {err ? <Text style={styles.err}>{err}</Text> : null}
 
-          <Pressable
+          <PremiumButton
             testID="signup-submit-button"
-            disabled={!canSubmit}
+            variant="primary"
+            label={t('signup')}
             onPress={submit}
-            style={[styles.cta, !canSubmit && { opacity: 0.35 }]}
-          >
-            {busy ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.ctaText}>{t('signup')}</Text>}
-          </Pressable>
+            busy={busy}
+            disabled={!canSubmit}
+            style={{ marginTop: SPACING.lg }}
+          />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
+function Field({ label, value, onChange, testID, autoCapitalize }: any) {
+  return (
+    <View style={styles.field}>
+      <Text style={styles.label}>{label}</Text>
+      <TextInput
+        testID={testID}
+        value={value}
+        onChangeText={onChange}
+        style={styles.input}
+        placeholderTextColor={COLORS.textMuted}
+        autoCapitalize={autoCapitalize}
+      />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
-  scroll: { paddingHorizontal: SPACING.xl, paddingBottom: SPACING.xxxl, paddingTop: SPACING.xl },
+  scroll: { paddingHorizontal: SPACING.xxl, paddingBottom: SPACING.xxxl, paddingTop: SPACING.xl },
   back: { position: 'absolute', top: 8, left: SPACING.lg, zIndex: 2, padding: 4 },
-  brand: { color: COLORS.text, fontSize: 14, letterSpacing: 8, textAlign: 'center', marginTop: SPACING.xl },
-  rule: { width: 16, height: 1, backgroundColor: COLORS.gold, alignSelf: 'center', marginVertical: SPACING.md },
-  title: { color: COLORS.text, fontSize: 26, fontFamily: 'serif', textAlign: 'center', marginBottom: SPACING.xxl },
-  photoWrap: { alignItems: 'center', marginBottom: SPACING.xl },
+  brand: { color: COLORS.ice, fontSize: 14, letterSpacing: 10, textAlign: 'center', marginTop: SPACING.xl },
+  title: { color: COLORS.ice, fontSize: 28, fontFamily: 'serif', textAlign: 'center', marginTop: SPACING.md, fontWeight: '300', marginBottom: SPACING.xxl },
+  photoWrap: { alignItems: 'center', marginBottom: SPACING.xxl },
+  photoRing: {
+    width: 108, height: 108, borderRadius: 54,
+    borderWidth: 1, borderColor: COLORS.goldHairline,
+    padding: 5,
+    alignItems: 'center', justifyContent: 'center',
+  },
   photoCircle: {
-    width: 96, height: 96, borderRadius: 48,
-    borderWidth: 1, borderColor: COLORS.gold,
+    flex: 1, alignSelf: 'stretch',
+    borderRadius: 999, borderWidth: 1, borderColor: COLORS.gold,
     alignItems: 'center', justifyContent: 'center',
     backgroundColor: COLORS.bgSecondary,
   },
-  photoLabel: { color: COLORS.textMuted, marginTop: SPACING.md, letterSpacing: 2, fontSize: 11 },
+  photoLabel: { color: COLORS.textMuted, marginTop: SPACING.md, letterSpacing: 3, fontSize: 10 },
   field: { marginBottom: SPACING.xl },
-  label: { color: COLORS.textMuted, fontSize: 10, letterSpacing: 3, marginBottom: 8 },
+  label: { color: COLORS.textMuted, fontSize: 10, letterSpacing: 3, marginBottom: 8, textTransform: 'uppercase' },
   input: {
-    color: COLORS.text,
-    fontSize: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    color: COLORS.ice, fontSize: 16, fontFamily: 'serif',
+    borderBottomWidth: 1, borderBottomColor: COLORS.hairlineStrong,
     paddingVertical: 8,
   },
   termsRow: { flexDirection: 'row', alignItems: 'center', marginVertical: SPACING.lg },
   checkbox: {
-    width: 20, height: 20, borderWidth: 1, borderColor: COLORS.borderStrong,
+    width: 18, height: 18, borderWidth: 1, borderColor: COLORS.hairlineStrong,
     marginRight: SPACING.md, alignItems: 'center', justifyContent: 'center',
   },
   checkboxOn: { backgroundColor: COLORS.gold, borderColor: COLORS.gold },
   termsText: { color: COLORS.textDim, fontSize: 13 },
   err: { color: '#E57373', fontSize: 12, marginBottom: SPACING.md },
-  cta: {
-    backgroundColor: COLORS.gold, borderRadius: 999, paddingVertical: 16,
-    alignItems: 'center', marginTop: SPACING.lg,
-  },
-  ctaText: { color: COLORS.bg, letterSpacing: 4, fontSize: 12, fontWeight: '700' },
 });
