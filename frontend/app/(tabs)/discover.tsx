@@ -59,5 +59,5 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.gold, paddingVertical: 18, paddingHorizontal: 48,
     borderRadius: 999, minWidth: 260, alignItems: 'center',
   },
-  ctaText: { color: COLORS.bg, letterSpacing: 6, fontSize: 13, fontWeight: '700' },
+  ctaText: { color: COLORS.bg, letterSpacing: 6, fontSize: 13, fontWeight: '700', textAlign: 'center', paddingLeft: 6 },
 });
