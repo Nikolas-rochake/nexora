@@ -10,6 +10,17 @@ import { api } from '@/src/context/api';
 import RelicArt from '@/src/relics/RelicArt';
 import { RelicKey } from '@/src/relics/data';
 
+type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
+
+type TileProps = {
+  testID: string;
+  label: string;
+  icon: IoniconName;
+  metric?: string;
+  accent?: boolean;
+  onPress: () => void;
+};
+
 export default function Home() {
   const router = useRouter();
   const { t } = useI18n();
@@ -32,6 +43,9 @@ export default function Home() {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
   useEffect(() => { load(); }, [load]);
+
+  const relicCount = stats?.total_relics ?? 0;
+  const invitesCount = stats?.invites_sent ?? 0;
 
   return (
     <SafeAreaView style={styles.container} testID="home-screen" edges={['top']}>
@@ -76,27 +90,31 @@ export default function Home() {
 
         <View style={styles.grid}>
           <Tile
-            testID="home-tile-collection"
-            label={t('my_collection')}
-            count={stats?.total_relics ?? 0}
-            onPress={() => router.push('/(tabs)/collection')}
-          />
-          <Tile
             testID="home-tile-discover"
             label={t('discover_relic')}
+            icon="add-outline"
             accent
             onPress={() => router.push('/(tabs)/discover')}
           />
           <Tile
-            testID="home-tile-invites"
-            label={t('invites')}
-            count={stats?.invites_sent ?? 0}
-            onPress={() => router.push('/invites')}
+            testID="home-tile-collection"
+            label={t('my_collection')}
+            icon="grid-outline"
+            metric={String(relicCount).padStart(2, '0')}
+            onPress={() => router.push('/(tabs)/collection')}
           />
           <Tile
             testID="home-tile-registry"
             label={t('world_registry')}
+            icon="library-outline"
             onPress={() => router.push('/(tabs)/registry')}
+          />
+          <Tile
+            testID="home-tile-invites"
+            label={t('invites')}
+            icon="mail-outline"
+            metric={String(invitesCount).padStart(2, '0')}
+            onPress={() => router.push('/invites')}
           />
         </View>
 
@@ -106,21 +124,34 @@ export default function Home() {
   );
 }
 
-function Tile({ label, count, accent, onPress, testID }: any) {
+function Tile({ testID, label, icon, metric, accent, onPress }: TileProps) {
+  const fg = accent ? COLORS.bg : COLORS.text;
+  const dim = accent ? COLORS.bg : COLORS.textMuted;
   return (
     <Pressable
       testID={testID}
       onPress={onPress}
-      style={[styles.tile, accent && styles.tileAccent]}
+      style={({ pressed }) => [
+        styles.tile,
+        accent && styles.tileAccent,
+        pressed && { opacity: 0.85 },
+      ]}
     >
-      {count !== undefined && (
-        <Text style={[styles.tileCount, accent && { color: COLORS.bg }]}>
-          {String(count).padStart(2, '0')}
-        </Text>
-      )}
-      <Text style={[styles.tileLabel, accent && { color: COLORS.bg }]}>{label}</Text>
-      <View style={styles.tileArrow}>
+      <View style={styles.tileTop}>
+        <View style={[styles.iconBox, accent && styles.iconBoxAccent]}>
+          <Ionicons name={icon} size={16} color={accent ? COLORS.bg : COLORS.gold} />
+        </View>
         <Ionicons name="arrow-forward" size={14} color={accent ? COLORS.bg : COLORS.gold} />
+      </View>
+      <View style={styles.tileBottom}>
+        {metric !== undefined ? (
+          <Text style={[styles.tileMetric, { color: fg }]}>{metric}</Text>
+        ) : (
+          <View style={{ height: 22 }} />
+        )}
+        <Text style={[styles.tileLabel, { color: dim }]} numberOfLines={1}>
+          {label}
+        </Text>
       </View>
     </Pressable>
   );
@@ -147,16 +178,25 @@ const styles = StyleSheet.create({
   emptyArrow: { color: COLORS.gold, fontSize: 20 },
   grid: {
     flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between',
-    marginTop: SPACING.xl, gap: SPACING.md,
+    marginTop: SPACING.xl,
+    rowGap: SPACING.md,
   },
   tile: {
-    width: '48%', minHeight: 118,
+    width: '48.5%', height: 132,
     borderWidth: 1, borderColor: COLORS.border, borderRadius: 12,
     padding: SPACING.lg, justifyContent: 'space-between',
     backgroundColor: COLORS.bgSecondary,
   },
   tileAccent: { backgroundColor: COLORS.gold, borderColor: COLORS.gold },
-  tileCount: { color: COLORS.text, fontSize: 28, fontFamily: 'serif' },
-  tileLabel: { color: COLORS.textDim, fontSize: 11, letterSpacing: 2, marginTop: SPACING.md },
-  tileArrow: { position: 'absolute', top: SPACING.lg, right: SPACING.lg },
+  tileTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  iconBox: {
+    width: 30, height: 30, borderRadius: 999,
+    borderWidth: 1, borderColor: COLORS.border,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: COLORS.bg,
+  },
+  iconBoxAccent: { backgroundColor: 'rgba(9,9,9,0.08)', borderColor: 'rgba(9,9,9,0.25)' },
+  tileBottom: {},
+  tileMetric: { fontSize: 22, fontFamily: 'serif', letterSpacing: 1 },
+  tileLabel: { fontSize: 11, letterSpacing: 2, marginTop: 4 },
 });
