@@ -1,0 +1,177 @@
+{
+  "app_name": "NEXORA",
+  "personality": "6 Glass / Luxe DARK",
+  "personality_one_liner": "An ultra-premium, cinematic digital vault for high-end collectibles, fusing minimalist museum curation with sleek, Rolex/Apple-inspired interactions and deep matte contrasts.",
+  "color": {
+    "surface": "#090909",
+    "onSurface": "#FFFFFF",
+    "surfaceSecondary": "#151515",
+    "onSurfaceSecondary": "#EAEAEA",
+    "surfaceTertiary": "#212121",
+    "onSurfaceTertiary": "#D4D4D4",
+    "surfaceInverse": "#FFFFFF",
+    "onSurfaceInverse": "#090909",
+    "brand": "#C9A961",
+    "brandPrimary": "#C9A961",
+    "onBrandPrimary": "#090909",
+    "brandSecondary": "#A88A4A",
+    "onBrandSecondary": "#000000",
+    "brandTertiary": "#2A2312",
+    "onBrandTertiary": "#E8D5A5",
+    "success": "#2E3B32",
+    "onSuccess": "#82C99B",
+    "warning": "#4A3E23",
+    "onWarning": "#F5C869",
+    "error": "#3D2424",
+    "onError": "#E57373",
+    "info": "#233342",
+    "onInfo": "#7BAAF5",
+    "border": "#262626",
+    "borderStrong": "#4A4A4A",
+    "divider": "#1A1A1A"
+  },
+  "typography": {
+    "displayFontFamily": "Cormorant Garamond",
+    "textFontFamily": "Geist",
+    "scale": {
+      "sm": 12,
+      "base": 14,
+      "lg": 16,
+      "xl": 20,
+      "2xl": 24,
+      "3xl": 32,
+      "4xl": 48
+    }
+  },
+  "spacing": {
+    "rule": "Generous and cinematic. Use large margins (lg/xl) between distinct sections to emulate empty gallery walls. Padding inside cards should be spacious.",
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32,
+    "3xl": 48
+  },
+  "radius_tokens": {
+    "sm": 4,
+    "md": 12,
+    "lg": 20,
+    "pill": 999
+  },
+  "shadow_tier": "0",
+  "navigation": "bottom_tabs",
+  "icon_set": "Phosphor",
+  "glassmorphism": {
+    "enabled": true,
+    "do's": [
+      "Bottom tab bar over dark backgrounds",
+      "Sticky headers when scrolling long lists (World Registry, Settings)",
+      "Floating Action Buttons or single primary CTAs (like 'REVEAL RELIC')",
+      "Subtle frosted overlays behind featured Relics on the Home screen"
+    ],
+    "dont's": [
+      "Do not use glass on form fields or standard list rows",
+      "Do not overdo blur intensity; keep it dark, smoky, and subtle"
+    ]
+  },
+  "platform_libraries": {
+    "glass": {
+      "ios": "expo-glass-effect",
+      "android": "expo-blur",
+      "low_end_android_fallback": "solid surfaceSecondary"
+    },
+    "image": "expo-image",
+    "blur": "expo-blur",
+    "bottom_sheet": "@gorhom/bottom-sheet",
+    "animation": "react-native-reanimated",
+    "gesture": "react-native-gesture-handler"
+  },
+  "screens": [
+    {
+      "name": "Splash",
+      "purpose": "Dark void introduction.",
+      "states": { "loading": "Centered NEXORA logo fading in", "empty": "", "error": "" },
+      "layout": "Pure #090909 background. Centered wordmark in display font, matte gold accent. Auto-navigates."
+    },
+    {
+      "name": "Welcome",
+      "purpose": "First elegant touchpoint.",
+      "states": { "loading": "Spinner", "empty": "", "error": "" },
+      "layout": "Cinematic text ('Bem-vindo à Nexora' / 'A exclusividade começa aqui') in upper half. Bottom third contains a glowing/matte gold 'Enter' CTA."
+    },
+    {
+      "name": "Auth (Login & Signup)",
+      "purpose": "Mock auth gateway.",
+      "states": { "loading": "Spinner", "empty": "", "error": "Red text below input" },
+      "layout": "Minimalist forms. Inputs are thin border-only (no fill). Labels above inputs. Social buttons are pill-shaped with brand icons."
+    },
+    {
+      "name": "Home",
+      "purpose": "Showcase user's rarest asset and quick actions.",
+      "states": { "loading": "Skeleton of hero card", "empty": "Prompt to 'Discover your first Relic'", "error": "Retry block" },
+      "layout": "Large cinematic hero card occupying 50% of the screen showcasing the rarest Relic over a dark frosted background. Below: minimalist horizontal lists or tiles for Collection, World Registry, Invites."
+    },
+    {
+      "name": "Discover & Reveal Relic",
+      "purpose": "The core unboxing experience. A digital vault opening.",
+      "states": { "loading": "", "empty": "", "error": "" },
+      "layout": "Darkens screen entirely. Relic shape is rendered in center. 'REVEAL RELIC' button at bottom. On press -> Reanimated sequence: Shape scales and rotates, lighting gradient shifts, then sequentially fades in Image -> Name -> Number -> Description."
+    },
+    {
+      "name": "Relic Detail",
+      "purpose": "The certificate of authenticity and history.",
+      "states": { "loading": "Spinner", "empty": "", "error": "" },
+      "layout": "Top half is full-width Relic visual with a subtle gradient scrim. Bottom half scrolls over it, containing the official description, history, and a stark, highly structured 'Certificate' card (showing max qty, remaining, dates, first collector)."
+    },
+    {
+      "name": "My Collection",
+      "purpose": "Gallery view of owned and locked assets.",
+      "states": { "loading": "Grid skeletons", "empty": "Empty state illustration", "error": "" },
+      "layout": "2-column grid. Owned Relics display in their metallic gold/accent colors. Undiscovered Relics are rendered in flat #262626 (surfaceTertiary) to signify lock."
+    },
+    {
+      "name": "World Registry",
+      "purpose": "Ledger of all Relics in existence.",
+      "states": { "loading": "List skeletons", "empty": "", "error": "" },
+      "layout": "Editorial list layout. Each row has the Relic name, its geometric icon on the left, and a monospace/tabular numbers count on the right (e.g., Genesis 0/1)."
+    },
+    {
+      "name": "Profile & Invites",
+      "purpose": "Collector identity and exclusivity engine.",
+      "states": { "loading": "Spinner", "empty": "", "error": "" },
+      "layout": "Avatar in a geometric frame. Stats shown as large metrics (Influence, Relic Count). Invites section features a large, copyable code inside a surfaceSecondary container with a subtle gold border."
+    }
+  ],
+  "images": {
+    "splash_bg": {
+      "url": "https://images.unsplash.com/photo-1693648793394-0b76b7eb042e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2ODl8MHwxfHNlYXJjaHwyfHxkYXJrJTIwYWJzdHJhY3QlMjBsdXh1cnklMjB0ZXh0dXJlfGVufDB8fHx8MTc4NDEzNjI1MHww&ixlib=rb-4.1.0&q=85",
+      "dark": "https://images.unsplash.com/photo-1693648793394-0b76b7eb042e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2ODl8MHwxfHNlYXJjaHwyfHxkYXJrJTIwYWJzdHJhY3QlMjBsdXh1cnklMjB0ZXh0dXJlfGVufDB8fHx8MTc4NDEzNjI1MHww&ixlib=rb-4.1.0&q=85",
+      "alt": "Dark abstract luxury wavy background"
+    },
+    "metallic_gold_texture": {
+      "url": "https://images.unsplash.com/photo-1656055450481-e47bc720e687?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NDh8MHwxfHNlYXJjaHwzfHxtYXR0ZSUyMGdvbGQlMjBtZXRhbCUyMHRleHR1cmV8ZW58MHx8fHwxNzg0MTM2MjQ5fDA&ixlib=rb-4.1.0&q=85",
+      "dark": "https://images.unsplash.com/photo-1656055450481-e47bc720e687?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NDh8MHwxfHNlYXJjaHwzfHxtYXR0ZSUyMGdvbGQlMjBtZXRhbCUyMHRleHR1cmV8ZW58MHx8fHwxNzg0MTM2MjQ5fDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Matte gold noise metallic texture"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Follow the '6 Glass / Luxe DARK' personality religiously. The background is an unyielding #090909. Avoid grey-heavy screens; rely on contrast and empty space.",
+    "Implement real local mock auth logic that securely manages state before showing the Home tab.",
+    "For the multi-language requirement, setup an i18n context (PT/EN) so strings dynamically swap.",
+    "RELIC SVG INSTRUCTIONS (CRITICAL): Build components using `react-native-svg`. ALL 10 Relics must be minimalist geometric vector shapes with metallic/gradient fills (use react-native-svg LinearGradient/RadialGradient referencing the brand hexes).",
+    "1. Genesis: Perfect Sphere / Concentric circles.",
+    "2. Aeternum: Infinity ring / Mobius strip.",
+    "3. Constellation: Star pattern / interconnected nodes.",
+    "4. Eclipse: Disc with an offset corona glow.",
+    "5. Painita: Asymmetrical sharp crystal/diamond shape.",
+    "6. Apex: Clean pyramid or tetrahedron.",
+    "7. Aureon: Minimalist sunburst / radial rays.",
+    "8. Obsidian: Monolithic sharp shard / trapezoid.",
+    "9. Alfalium: Complex molecular / hexagonal form.",
+    "10. Omeguium: Simple perfect triangle/square interlocking.",
+    "The Reveal Animation must feel expensive. Use `react-native-reanimated`. Start with a dark screen, scale up the SVG, apply a slow rotation, and sequentially fade in metadata (Image -> Name -> Number -> Description).",
+    "Ensure 'My Collection' dims/grays out undiscovered Relics using #262626 fill, while owned Relics display their matte gold/metallic gradients.",
+    "World Registry must show the real max supply counts clearly formatted: '0 / 10000'."
+  ]
+}
